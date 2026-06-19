@@ -100,12 +100,31 @@ canonical URL, `theme-color`, a web manifest, favicons + apple-touch-icon,
 structured data. There's also a `static/robots.txt` and a `static/sitemap.xml`.
 
 > **Before deploying:** confirm Open Graph and canonical tags use your live origin
-> (`https://systemd-generateor.stefanbogdanovic.dev`) in `src/routes/+layout.svelte`,
+> (`https://systemd-generator.stefanbogdanovic.dev`) in `src/lib/site.ts`,
 > `static/robots.txt`, and `static/sitemap.xml`.
 
 After deploying, validate the preview with the
 [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) and
 [X Card Validator](https://cards-dev.twitter.com/validator).
+
+## Analytics & CSP
+
+[Umami](https://umami.is) analytics loads from `https://analytics.stefanbogdanovic.dev`
+when `PUBLIC_UMAMI_SITE_ID` is set at **build time**:
+
+```bash
+cp .env.example .env
+# paste your website ID from the Umami dashboard into .env
+pnpm build
+```
+
+Content Security Policy uses **hash-based** `script-src` (no `unsafe-inline`).
+`style-src` includes `'unsafe-inline'` because Svelte sets inline styles at runtime
+(transitions, animations) — hashes cannot cover those.
+SvelteKit computes hashes at build time (`kit.csp` in `svelte.config.js`); a post-build
+step copies the policy into `deploy/nginx/security-headers.conf` for the nginx
+`Content-Security-Policy` response header. Deploy the generated snippet to
+`/etc/nginx/snippets/systemd-generator-security-headers.conf` after every `pnpm build`.
 
 ### Regenerating the images
 

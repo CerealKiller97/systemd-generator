@@ -1,6 +1,7 @@
 <script lang="ts">
   import CopyIcon from "./ui/CopyIcon.svelte";
   import { copyText } from "@/lib/utils";
+  import { trackEvent } from "@/lib/umami";
 
   let { command }: { command: string } = $props();
   let copied = $state(false);
@@ -8,6 +9,7 @@
 
   async function copy() {
     await copyText(command);
+    trackEvent("copy-setup-command");
     copied = true;
     flash = false;
     setTimeout(() => (flash = true), 0);

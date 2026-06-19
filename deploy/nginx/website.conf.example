@@ -1,0 +1,69 @@
+# Main site — stefanbogdanovic.dev
+# This vhost owns reuseport on 443. All other vhosts (e.g. systemd-generator)
+# must use `listen 443 quic` WITHOUT reuseport.
+#
+# Requires nginx built with http_v3: nginx -V 2>&1 | grep http_v3
+# If nginx -t still fails, remove the two quic listen lines and http3/quic_retry.
+
+server {
+    listen 443 quic reuseport;
+    listen [::]:443 quic reuseport;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    http3 on;
+    quic_retry on;
+    server_name stefanbogdanovic.dev;
+
+    ssl_certificate     /etc/letsencrypt/live/stefanbogdanovic.dev/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/stefanbogdanovic.dev/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    access_log /var/log/nginx/website.access.log;
+    error_log  /var/log/nginx/website.error.log;
+
+    add_header X-Frame-Options           "SAMEORIGIN"                                   always;
+    add_header X-Content-Type-Options    "nosniff"                                      always;
+    add_header Referrer-Policy           "strict-origin-when-cross-origin"              always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header Permissions-Policy        "camera=(), microphone=(), geolocation=()"     always;
+    add_header Alt-Svc                   'h3=":443"; ma=86400'                         always;
+
+    location / {
+        proxy_pass http://127.0.0.1:6000;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 90;
+        proxy_connect_timeout 10;
+        proxy_send_timeout 90;
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+        proxy_busy_buffers_size 256k;
+    }
+
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|webp|avif|svg|woff2?|ttf|eot|otf|map|txt|xml|json|wasm)$ {
+        proxy_pass http://127.0.0.1:6000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+
+        expires 1d;
+        add_header Cache-Control "public, max-age=86400, must-revalidate" always;
+        access_log off;
+    }
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name stefanbogdanovic.dev;
+    return 301 https://$host$request_uri;
+}

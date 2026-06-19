@@ -8,11 +8,13 @@
     children,
     class: className = "",
     label = "Open popover",
+    onOpen,
   }: {
     trigger: Snippet;
     children: Snippet;
     class?: string;
     label?: string;
+    onOpen?: () => void;
   } = $props();
 
   let open = $state(false);
@@ -33,7 +35,11 @@
     type="button"
     aria-label={label}
     aria-expanded={open}
-    onclick={() => (open = !open)}
+    onclick={() => {
+      const next = !open;
+      open = next;
+      if (next) onOpen?.();
+    }}
     class="inline-flex items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
   >
     {@render trigger()}

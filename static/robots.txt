@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://systemd-generateor.stefanbogdanovic.dev/sitemap.xml
+Sitemap: https://systemd-generator.stefanbogdanovic.dev/sitemap.xml

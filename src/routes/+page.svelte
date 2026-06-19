@@ -7,6 +7,7 @@
     Search,
     ShieldCheck,
     ChevronDown,
+    Star,
   } from "@lucide/svelte";
   import { SECTIONS } from "@/lib/systemd-options";
   import {
@@ -24,6 +25,8 @@
   import Input from "@/components/ui/Input.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Footer from "@/components/Footer.svelte";
+  import { trackEvent } from "@/lib/umami";
+  import { GITHUB_REPO_URL } from "@/lib/site";
 
   let form: FormState = $state(defaultState());
   let query = $state("");
@@ -43,6 +46,7 @@
 
   function reset() {
     form = defaultState();
+    trackEvent("reset-form");
   }
 
   function matches(o: (typeof SECTIONS)[number]["options"][number]) {
@@ -56,6 +60,7 @@
 
   async function copy() {
     await copyText(result.content);
+    trackEvent("copy-unit", { unit: unitName || "myapp.service" });
     copied = true;
     // toggle off→on in a fresh task so the CSS flash restarts on rapid re-clicks
     flash = false;
@@ -65,6 +70,7 @@
   }
 
   function download() {
+    trackEvent("download-unit", { unit: unitName || "myapp.service" });
     const blob = new Blob([result.content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -110,6 +116,16 @@
         {result.count === 1 ? "directive" : "directives"}
       </Badge>
       <div class="flex-1"></div>
+      <a
+        href={GITHUB_REPO_URL}
+        target="_blank"
+        rel="noreferrer"
+        onclick={() => trackEvent("star-project")}
+        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-transparent px-3 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Star class="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+        <span class="hidden sm:inline">Star this project</span>
+      </a>
       <Button variant="outline" size="sm" onclick={reset}>
         <RotateCcw class="h-3.5 w-3.5" />
         Reset

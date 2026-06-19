@@ -8,6 +8,7 @@
   import Badge from "@/components/ui/Badge.svelte";
   import Select from "@/components/ui/Select.svelte";
   import Popover from "@/components/ui/Popover.svelte";
+  import { trackEvent } from "@/lib/umami";
 
   let {
     option,
@@ -48,7 +49,10 @@
       </Badge>
     {/if}
 
-    <Popover label={`Info about ${option.key}`}>
+    <Popover
+      label={`Info about ${option.key}`}
+      onOpen={() => trackEvent("info-popup", { directive: option.key })}
+    >
       {#snippet trigger()}
         <span
           class="inline-flex h-5 w-5 items-center justify-center rounded-full hover:bg-primary/15"
