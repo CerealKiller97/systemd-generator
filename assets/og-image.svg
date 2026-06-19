@@ -1,0 +1,81 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a1322"/>
+      <stop offset="1" stop-color="#070d18"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(250 120) scale(520)">
+      <stop stop-color="#22d3ee" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1050 560) scale(480)">
+      <stop stop-color="#3b82f6" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="title" x1="80" y1="250" x2="80" y2="340" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  <rect x="0.5" y="0.5" width="1199" height="629" rx="0" stroke="#1e293b" stroke-opacity="0.6"/>
+
+  <!-- subtle dot grid -->
+  <g fill="#1e293b" fill-opacity="0.5">
+    <circle cx="80" cy="500" r="2"/><circle cx="120" cy="500" r="2"/><circle cx="160" cy="500" r="2"/>
+    <circle cx="80" cy="540" r="2"/><circle cx="120" cy="540" r="2"/><circle cx="160" cy="540" r="2"/>
+    <circle cx="80" cy="580" r="2"/><circle cx="120" cy="580" r="2"/><circle cx="160" cy="580" r="2"/>
+  </g>
+
+  <!-- logo badge -->
+  <rect x="80" y="96" width="84" height="84" rx="20" fill="#22d3ee" fill-opacity="0.14" stroke="#22d3ee" stroke-opacity="0.35"/>
+  <g transform="translate(102 118) scale(1.67)" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </g>
+
+  <!-- eyebrow -->
+  <text x="184" y="128" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="20" letter-spacing="3" fill="#22d3ee" font-weight="600">SYSTEMD · UNIT FILE BUILDER</text>
+  <text x="184" y="160" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="20" fill="#64748b">Free · runs in your browser · no signup</text>
+
+  <!-- title -->
+  <text x="80" y="296" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="64" font-weight="800" fill="url(#title)" letter-spacing="-1.5">systemd Unit Generator</text>
+  <text x="80" y="364" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Build, understand &amp; export <tspan fill="#e2e8f0" font-weight="600">.service</tspan> files — with an</text>
+  <text x="80" y="406" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">info popup on every directive and a live editor.</text>
+
+  <!-- feature pills -->
+  <g font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="500">
+    <rect x="80" y="452" width="232" height="46" rx="23" fill="#0f1c30" stroke="#22d3ee" stroke-opacity="0.3"/>
+    <text x="110" y="481" fill="#7dd3fc">All directives + docs</text>
+
+    <rect x="328" y="452" width="196" height="46" rx="23" fill="#0f1c30" stroke="#22d3ee" stroke-opacity="0.3"/>
+    <text x="358" y="481" fill="#7dd3fc">Live code editor</text>
+
+    <rect x="540" y="452" width="232" height="46" rx="23" fill="#0f1c30" stroke="#34d399" stroke-opacity="0.35"/>
+    <text x="570" y="481" fill="#6ee7b7">Security hardening</text>
+  </g>
+
+  <!-- code card -->
+  <g transform="translate(820 150)">
+    <rect x="0" y="0" width="300" height="330" rx="16" fill="#0c1320" stroke="#1e293b"/>
+    <circle cx="24" cy="26" r="6" fill="#ff5f56"/>
+    <circle cx="46" cy="26" r="6" fill="#ffbd2e"/>
+    <circle cx="68" cy="26" r="6" fill="#27c93f"/>
+    <text x="110" y="31" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="14" fill="#475569">myapp.service</text>
+    <g font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="15.5">
+      <text x="24" y="74" fill="#22d3ee" font-weight="600">[Unit]</text>
+      <text x="24" y="100" fill="#7dd3fc">Description<tspan fill="#475569">=</tspan><tspan fill="#6ee7b7">My app</tspan></text>
+      <text x="24" y="126" fill="#7dd3fc">After<tspan fill="#475569">=</tspan><tspan fill="#6ee7b7">network.target</tspan></text>
+      <text x="24" y="166" fill="#22d3ee" font-weight="600">[Service]</text>
+      <text x="24" y="192" fill="#7dd3fc">ExecStart<tspan fill="#475569">=</tspan><tspan fill="#6ee7b7">/usr/bin/app</tspan></text>
+      <text x="24" y="218" fill="#7dd3fc">Restart<tspan fill="#475569">=</tspan><tspan fill="#6ee7b7">on-failure</tspan></text>
+      <text x="24" y="244" fill="#7dd3fc">User<tspan fill="#475569">=</tspan><tspan fill="#6ee7b7">myapp</tspan></text>
+      <text x="24" y="284" fill="#22d3ee" font-weight="600">[Install]</text>
+      <text x="24" y="310" fill="#7dd3fc">WantedBy<tspan fill="#475569">=</tspan><tspan fill="#6ee7b7">multi-user…</tspan></text>
+    </g>
+  </g>
+</svg>
