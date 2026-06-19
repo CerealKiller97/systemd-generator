@@ -1,5 +1,7 @@
 # systemd Unit Generator
 
+[![systemd Unit Generator — build & export .service files](static/og-image.png)](https://systemd-generator.stefanbogdanovic.dev/)
+
 A polished, single-page web app for building, understanding, and exporting
 systemd `.service` unit files. Every directive has an inline **info popup**
 explaining what it does, an example, and a link to the official man page. As you
@@ -198,4 +200,4 @@ files need to change.
 
 ## License
 
-MIT — do whatever you like.
+Licensed under the [Apache License, Version 2.0](LICENSE).
