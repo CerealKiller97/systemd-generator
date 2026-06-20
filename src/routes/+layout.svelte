@@ -3,8 +3,13 @@
     import { env } from "$env/dynamic/public";
     import { UMAMI_SCRIPT_URL } from "$lib/umami";
     import { SITE_ORIGIN } from "$lib/site";
+    import type { Snippet } from "svelte";
 
-    let { children } = $props();
+    type Props = {
+        children: Snippet;
+    };
+
+    let { children }: Props = $props();
 
     const siteUrl = SITE_ORIGIN;
 

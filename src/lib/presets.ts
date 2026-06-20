@@ -25,7 +25,7 @@ const SERVICE = 1;
 const HARDENING = 2;
 const INSTALL = 3;
 
-export interface Preset {
+export type Preset = {
   /** Stable id, also used as the analytics label. */
   id: string;
   /** Short chip label. */
@@ -42,7 +42,7 @@ export interface Preset {
   fields: FormState;
   /** Optional caveats shown after the preset is loaded (Markdown-free text). */
   notes?: string;
-}
+};
 
 // Conventions used across the Laravel presets. Tweakable per deploy, but these
 // match the most common Forge / Ploi layout so the output is copy-paste ready.
