@@ -1,5 +1,9 @@
 <script lang="ts">
-  let { content }: { content: string } = $props();
+  type Props = {
+    content: string;
+  };
+
+  let { content }: Props = $props();
   const lines = $derived(content.replace(/\n$/, "").split("\n"));
   const eqIndex = (line: string) => line.indexOf("=");
   const isSection = (line: string) => /^\s*\[.*\]\s*$/.test(line);

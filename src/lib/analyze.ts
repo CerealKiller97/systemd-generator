@@ -4,9 +4,7 @@ import { fieldId, type FormState } from "./systemd-generate";
 // Resolve section indices by identity so the analysis survives any reordering
 // of SECTIONS. Two sections share id "Service"; the title disambiguates them.
 const UNIT = SECTIONS.findIndex((s) => s.id === "Unit");
-const SERVICE = SECTIONS.findIndex(
-  (s) => s.id === "Service" && s.title === "[Service]"
-);
+const SERVICE = SECTIONS.findIndex((s) => s.id === "Service" && s.title === "[Service]");
 const HARDENING = SECTIONS.findIndex((s) => s.title === "Security hardening");
 const INSTALL = SECTIONS.findIndex((s) => s.id === "Install");
 
@@ -17,9 +15,7 @@ function val(form: FormState, section: number, key: string): string {
 
 /** A boolean directive is "on" only when explicitly set to yes/true/on. */
 function on(form: FormState, section: number, key: string): boolean {
-  return ["yes", "true", "on", "1"].includes(
-    val(form, section, key).toLowerCase()
-  );
+  return ["yes", "true", "on", "1"].includes(val(form, section, key).toLowerCase());
 }
 
 /** A list/text directive counts as set when it has any content. */
@@ -29,23 +25,23 @@ function set(form: FormState, section: number, key: string): boolean {
 
 // ── Hardening score ─────────────────────────────────────────────────────────
 
-export interface HardeningCheck {
+export type HardeningCheck = {
   label: string;
   /** Relative weight toward the score. */
   weight: number;
   satisfied: boolean;
   /** Short reason / what it buys you. */
   hint: string;
-}
+};
 
-export interface HardeningResult {
+export type HardeningResult = {
   /** 0–10, one decimal. */
   score: number;
   /** Count of satisfied checks. */
   passed: number;
   total: number;
   checks: HardeningCheck[];
-}
+};
 
 /**
  * A pragmatic, weighted echo of `systemd-analyze security` over the subset of
@@ -54,9 +50,7 @@ export interface HardeningResult {
 export function hardeningScore(form: FormState): HardeningResult {
   const protectSystem = val(form, HARDENING, "ProtectSystem");
   const protectHome = val(form, HARDENING, "ProtectHome");
-  const userSet =
-    set(form, SERVICE, "User") &&
-    val(form, SERVICE, "User").toLowerCase() !== "root";
+  const userSet = set(form, SERVICE, "User") && val(form, SERVICE, "User").toLowerCase() !== "root";
 
   const checks: HardeningCheck[] = [
     {
@@ -143,10 +137,10 @@ export function hardeningScore(form: FormState): HardeningResult {
 
 export type LintLevel = "error" | "warning" | "info";
 
-export interface Lint {
+export type Lint = {
   level: LintLevel;
   message: string;
-}
+};
 
 const RANK: Record<LintLevel, number> = { error: 0, warning: 1, info: 2 };
 
@@ -213,10 +207,7 @@ export function validate(form: FormState): Lint[] {
   }
 
   // Restart without a delay can spin in a tight loop.
-  if (
-    (restart === "always" || restart === "on-failure") &&
-    !set(form, SERVICE, "RestartSec")
-  ) {
+  if ((restart === "always" || restart === "on-failure") && !set(form, SERVICE, "RestartSec")) {
     lints.push({
       level: "info",
       message:
@@ -243,16 +234,14 @@ export function validate(form: FormState): Lint[] {
   if (val(form, SERVICE, "User").toLowerCase() === "root") {
     lints.push({
       level: "info",
-      message:
-        "Running as User=root. Prefer a dedicated user or DynamicUser=yes to limit blast radius.",
+      message: "Running as User=root. Prefer a dedicated user or DynamicUser=yes to limit blast radius.",
     });
   }
 
   if (!set(form, UNIT, "Description")) {
     lints.push({
       level: "info",
-      message:
-        "No Description= — it's shown by `systemctl status` and in the journal. Add a short one.",
+      message: "No Description= — it's shown by `systemctl status` and in the journal. Add a short one.",
     });
   }
 

@@ -1,0 +1,84 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare SvelteKit
+        run: npm run prepare
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    env:
+      DEPLOY_STAGING: /home/stefan/systemd-generator
+      DEPLOY_DEST: /var/www/systemd-generator
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare SvelteKit
+        run: npm run prepare
+
+      - name: Configure environment
+        run: |
+          cp .env.example .env
+          if [ -n "${{ secrets.PUBLIC_UMAMI_SITE_ID }}" ]; then
+            sed -i "s/^PUBLIC_UMAMI_SITE_ID=.*/PUBLIC_UMAMI_SITE_ID=${{ secrets.PUBLIC_UMAMI_SITE_ID }}/" .env
+          fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: build/*
+          target: ${{ env.DEPLOY_STAGING }}
+          strip_components: 1
+          rm: true
+
+      - name: Publish on server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            sudo rm -rf ${{ env.DEPLOY_DEST }}
+            sudo mv ${{ env.DEPLOY_STAGING }} ${{ env.DEPLOY_DEST }}

@@ -35,11 +35,11 @@ function emitLines(opt: SystemdOption, raw: string): string[] {
   return [`${opt.key}=${trimmed}`];
 }
 
-export interface GenerateResult {
+export type GenerateResult = {
   content: string;
   /** number of directives emitted */
   count: number;
-}
+};
 
 export function generateUnitFile(state: FormState): GenerateResult {
   const buckets: Record<SectionId, string[]> = {
@@ -58,7 +58,9 @@ export function generateUnitFile(state: FormState): GenerateResult {
 
   const parts: string[] = [];
   for (const id of ORDER) {
-    if (buckets[id].length === 0) continue;
+    if (buckets[id].length === 0) {
+      continue;
+    }
     parts.push(`[${id}]`);
     parts.push(...buckets[id]);
     parts.push(""); // blank line between sections
@@ -82,7 +84,9 @@ export function emptyState(): FormState {
   const s: FormState = {};
   SECTIONS.forEach((section, sectionIndex) => {
     section.options.forEach((opt) => {
-      if (opt.default) s[fieldId(sectionIndex, opt.key)] = opt.default;
+      if (opt.default) {
+        s[fieldId(sectionIndex, opt.key)] = opt.default;
+      }
     });
   });
   return s;
@@ -91,6 +95,7 @@ export function emptyState(): FormState {
 /** Sensible starting point so the right pane is never empty. */
 export function defaultState(): FormState {
   const s = emptyState();
+
   // A friendly starter example.
   s[fieldId(0, "Description")] = "My example service";
   s[fieldId(0, "After")] = "network-online.target";
@@ -99,5 +104,6 @@ export function defaultState(): FormState {
   s[fieldId(1, "Restart")] = "on-failure";
   s[fieldId(1, "RestartSec")] = "5s";
   s[fieldId(1, "User")] = "myapp";
+
   return s;
 }

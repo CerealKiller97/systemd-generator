@@ -1,11 +1,11 @@
 import { defaultState, type FormState } from "./systemd-generate";
 
-interface SharePayload {
+type SharePayload = {
   /** unit file name */
   u: string;
   /** only the fields that differ from the default starting state */
   f: Record<string, string>;
-}
+};
 
 function base64urlEncode(input: string): string {
   const bytes = new TextEncoder().encode(input);

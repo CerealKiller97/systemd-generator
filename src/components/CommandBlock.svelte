@@ -3,7 +3,11 @@
   import { copyText } from "@/lib/utils";
   import { trackEvent } from "@/lib/umami";
 
-  let { command }: { command: string } = $props();
+  type Props = {
+    command: string;
+  };
+
+  let { command }: Props = $props();
   let copied = $state(false);
   let flash = $state(false);
 

@@ -8,12 +8,12 @@ export type FieldType =
 
 export type SectionId = "Unit" | "Service" | "Install";
 
-export interface SelectChoice {
+export type SelectChoice = {
   value: string;
   label: string;
-}
+};
 
-export interface SystemdOption {
+export type SystemdOption = {
   /** The exact systemd directive name, e.g. "ExecStart". */
   key: string;
   /** Human-friendly label. */
@@ -33,16 +33,16 @@ export interface SystemdOption {
   manpage: string;
   /** Mark visually as recommended / important. */
   recommended?: boolean;
-}
+};
 
-export interface SystemdSection {
+export type SystemdSection = {
   id: SectionId;
   title: string;
   description: string;
   /** Default-open in the accordion. */
   defaultOpen?: boolean;
   options: SystemdOption[];
-}
+};
 
 const DOC = "https://www.freedesktop.org/software/systemd";
 
