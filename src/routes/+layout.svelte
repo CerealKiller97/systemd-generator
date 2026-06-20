@@ -1,6 +1,6 @@
 <script lang="ts">
     import "../index.css";
-    import { PUBLIC_UMAMI_SITE_ID } from "$env/static/public";
+    import { env } from "$env/dynamic/public";
     import { UMAMI_SCRIPT_URL } from "$lib/umami";
     import { SITE_ORIGIN } from "$lib/site";
 
@@ -83,8 +83,8 @@
     {JSON.stringify(structuredData)}
     </script>
 
-    {#if PUBLIC_UMAMI_SITE_ID}
-        <script defer src={UMAMI_SCRIPT_URL} data-website-id={PUBLIC_UMAMI_SITE_ID}></script>
+    {#if env.PUBLIC_UMAMI_SITE_ID}
+        <script defer src={UMAMI_SCRIPT_URL} data-website-id={env.PUBLIC_UMAMI_SITE_ID}></script>
     {/if}
 </svelte:head>
 

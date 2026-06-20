@@ -77,14 +77,20 @@ export function generateUnitFile(state: FormState): GenerateResult {
   return { content: parts.join("\n").trimEnd() + "\n", count };
 }
 
-/** Sensible starting point so the right pane is never empty. */
-export function defaultState(): FormState {
+/** A clean slate carrying only each option's own default value. */
+export function emptyState(): FormState {
   const s: FormState = {};
   SECTIONS.forEach((section, sectionIndex) => {
     section.options.forEach((opt) => {
       if (opt.default) s[fieldId(sectionIndex, opt.key)] = opt.default;
     });
   });
+  return s;
+}
+
+/** Sensible starting point so the right pane is never empty. */
+export function defaultState(): FormState {
+  const s = emptyState();
   // A friendly starter example.
   s[fieldId(0, "Description")] = "My example service";
   s[fieldId(0, "After")] = "network-online.target";
