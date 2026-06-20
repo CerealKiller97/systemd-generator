@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import { replaceState } from "$app/navigation";
   import { slide, fly, fade } from "svelte/transition";
   import {
     Cog,
@@ -7,7 +9,14 @@
     Search,
     ShieldCheck,
     ChevronDown,
+    ChevronRight,
     Star,
+    Share2,
+    Link2,
+    AlertTriangle,
+    Info,
+    CircleCheck,
+    Circle,
   } from "@lucide/svelte";
   import { SECTIONS } from "@/lib/systemd-options";
   import {
@@ -16,6 +25,8 @@
     generateUnitFile,
     defaultState,
   } from "@/lib/systemd-generate";
+  import { hardeningScore, validate, type LintLevel } from "@/lib/analyze";
+  import { encodeShare, decodeShare } from "@/lib/share";
   import CopyIcon from "@/components/ui/CopyIcon.svelte";
   import { copyText } from "@/lib/utils";
   import OptionField from "@/components/OptionField.svelte";
@@ -32,13 +43,45 @@
   let query = $state("");
   let unitName = $state("myapp.service");
   let copied = $state(false);
+  let shared = $state(false);
   let flash = $state(false);
+  let showChecks = $state(false);
   let openMap: Record<number, boolean> = $state(
     Object.fromEntries(SECTIONS.map((s, i) => [i, !!s.defaultOpen]))
   );
 
   const result = $derived(generateUnitFile(form));
   const q = $derived(query.trim().toLowerCase());
+  const hardening = $derived(hardeningScore(form));
+  const lints = $derived(validate(form));
+
+  // Restore a shared config from the URL hash on first load.
+  onMount(() => {
+    const token = location.hash.slice(1);
+    if (!token) return;
+    const decoded = decodeShare(token);
+    if (decoded) {
+      form = decoded.form;
+      unitName = decoded.unitName;
+      trackEvent("open-shared-link");
+    }
+  });
+
+  const scoreColor = (s: number) =>
+    s >= 7 ? "text-emerald-400" : s >= 4 ? "text-amber-400" : "text-rose-400";
+  const scoreBar = (s: number) =>
+    s >= 7 ? "bg-emerald-400" : s >= 4 ? "bg-amber-400" : "bg-rose-400";
+
+  const lintColor: Record<LintLevel, string> = {
+    error: "text-rose-400",
+    warning: "text-amber-400",
+    info: "text-sky-400",
+  };
+  const LintIcon: Record<LintLevel, typeof Info> = {
+    error: AlertTriangle,
+    warning: AlertTriangle,
+    info: Info,
+  };
 
   function set(id: string, value: string) {
     form[id] = value;
@@ -67,6 +110,18 @@
     setTimeout(() => (flash = true), 0);
     setTimeout(() => (copied = false), 1600);
     setTimeout(() => (flash = false), 720);
+  }
+
+  async function share() {
+    const token = encodeShare(form, unitName || "myapp.service");
+    const url = `${location.origin}${location.pathname}#${token}`;
+    // SvelteKit owns the history stack; use its replaceState so the hash isn't
+    // stripped by the router on the next tick.
+    replaceState(`#${token}`, {});
+    await copyText(url);
+    trackEvent("share-link");
+    shared = true;
+    setTimeout(() => (shared = false), 1600);
   }
 
   function download() {
@@ -241,6 +296,20 @@
                 <span in:fade={{ duration: 120 }}>Copy</span>
               {/if}
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onclick={share}
+              class={shared ? "text-emerald-400" : ""}
+            >
+              {#if shared}
+                <Link2 class="h-3.5 w-3.5" />
+                <span in:fly={{ y: 6, duration: 200 }}>Link copied</span>
+              {:else}
+                <Share2 class="h-3.5 w-3.5" />
+                <span in:fade={{ duration: 120 }}>Share</span>
+              {/if}
+            </Button>
             <Button variant="ghost" size="sm" onclick={download}>
               <Download class="h-3.5 w-3.5" />
               Download
@@ -251,6 +320,83 @@
             class="scrollbar-thin max-h-[52vh] overflow-auto p-4 font-mono text-[13px] leading-relaxed"
           >
             <HighlightedUnit content={result.content} />
+          </div>
+        </div>
+
+        <!-- Analysis: hardening score + validation -->
+        <div class="rounded-xl border border-border/60 bg-card/40">
+          <!-- hardening score -->
+          <div class="flex items-center gap-3 px-4 py-3">
+            <ShieldCheck class={`h-5 w-5 shrink-0 ${scoreColor(hardening.score)}`} />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="text-sm font-semibold text-foreground"
+                  >Hardening score</span
+                >
+                <span class={`font-mono text-sm font-semibold ${scoreColor(hardening.score)}`}>
+                  {hardening.score.toFixed(1)}<span class="text-muted-foreground"
+                    >/10</span
+                  >
+                </span>
+              </div>
+              <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  class={`h-full rounded-full transition-all duration-300 ${scoreBar(hardening.score)}`}
+                  style={`width:${hardening.score * 10}%`}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- per-check breakdown (collapsible) -->
+          <button
+            type="button"
+            onclick={() => (showChecks = !showChecks)}
+            class="flex w-full items-center gap-1.5 border-t border-border/40 px-4 py-2 text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ChevronRight
+              class={`h-3.5 w-3.5 transition-transform duration-200 ${showChecks ? "rotate-90" : ""}`}
+            />
+            {hardening.passed} of {hardening.total} measures applied
+          </button>
+          {#if showChecks}
+            <div transition:slide={{ duration: 160 }} class="px-4 pb-3">
+              <ul class="space-y-1.5">
+                {#each hardening.checks as check (check.label)}
+                  <li class="flex items-start gap-2 text-xs">
+                    {#if check.satisfied}
+                      <CircleCheck class="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                    {:else}
+                      <Circle class="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                    {/if}
+                    <span class={check.satisfied ? "text-foreground" : "text-muted-foreground"}>
+                      <span class="font-mono">{check.label}</span>
+                      <span class="text-muted-foreground"> — {check.hint}</span>
+                    </span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+
+          <!-- lints -->
+          <div class="border-t border-border/40 px-4 py-3">
+            {#if lints.length === 0}
+              <div class="flex items-center gap-2 text-xs text-emerald-400">
+                <CircleCheck class="h-3.5 w-3.5" />
+                No issues found — looks good.
+              </div>
+            {:else}
+              <ul class="space-y-2">
+                {#each lints as lint (lint.message)}
+                  {@const Icon = LintIcon[lint.level]}
+                  <li class="flex items-start gap-2 text-xs leading-relaxed">
+                    <Icon class={`mt-0.5 h-3.5 w-3.5 shrink-0 ${lintColor[lint.level]}`} />
+                    <span class="text-muted-foreground">{lint.message}</span>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
           </div>
         </div>
 
