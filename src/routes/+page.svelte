@@ -15,7 +15,9 @@
     fieldId,
     generateUnitFile,
     defaultState,
+    emptyState,
   } from "@/lib/systemd-generate";
+  import { PRESETS, type Preset } from "@/lib/presets";
   import CopyIcon from "@/components/ui/CopyIcon.svelte";
   import { copyText } from "@/lib/utils";
   import OptionField from "@/components/OptionField.svelte";
@@ -31,6 +33,7 @@
   let form: FormState = $state(defaultState());
   let query = $state("");
   let unitName = $state("myapp.service");
+  let activePreset: Preset | null = $state(null);
   let copied = $state(false);
   let flash = $state(false);
   let openMap: Record<number, boolean> = $state(
@@ -46,7 +49,15 @@
 
   function reset() {
     form = defaultState();
+    activePreset = null;
     trackEvent("reset-form");
+  }
+
+  function loadPreset(preset: Preset) {
+    form = { ...emptyState(), ...preset.fields };
+    unitName = preset.unitName;
+    activePreset = preset;
+    trackEvent("load-preset", { preset: preset.id, group: preset.group });
   }
 
   function matches(o: (typeof SECTIONS)[number]["options"][number]) {
@@ -60,7 +71,10 @@
 
   async function copy() {
     await copyText(result.content);
-    trackEvent("copy-unit", { unit: unitName || "myapp.service" });
+    trackEvent("copy-unit", {
+      unit: unitName || "myapp.service",
+      preset: activePreset?.id ?? "custom",
+    });
     copied = true;
     // toggle off→on in a fresh task so the CSS flash restarts on rapid re-clicks
     flash = false;
@@ -70,7 +84,10 @@
   }
 
   function download() {
-    trackEvent("download-unit", { unit: unitName || "myapp.service" });
+    trackEvent("download-unit", {
+      unit: unitName || "myapp.service",
+      preset: activePreset?.id ?? "custom",
+    });
     const blob = new Blob([result.content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -139,6 +156,56 @@
   >
     <!-- LEFT — form -->
     <section class="min-w-0">
+      <!-- Presets -->
+      <div class="mb-4 rounded-xl border border-border/60 bg-card/40 p-4">
+        <div class="mb-2.5 flex items-center gap-2">
+          <Star class="h-3.5 w-3.5 text-primary" />
+          <span class="text-sm font-semibold text-foreground"
+            >Start from a preset</span
+          >
+          <span class="text-xs text-muted-foreground"
+            >hardened, copy-paste-ready baselines</span
+          >
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          {#each PRESETS as preset (preset.id)}
+            {@const Icon = preset.icon}
+            <button
+              type="button"
+              title={preset.description}
+              onclick={() => loadPreset(preset)}
+              class={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                activePreset?.id === preset.id
+                  ? "border-primary/50 bg-primary/15 text-primary"
+                  : "border-input bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground"
+              }`}
+            >
+              <Icon
+                class={`h-3.5 w-3.5 ${
+                  activePreset?.id === preset.id
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }`}
+              />
+              <span class="text-muted-foreground">{preset.group}</span>
+              <span>{preset.label}</span>
+            </button>
+          {/each}
+        </div>
+
+        {#if activePreset?.notes}
+          <div
+            transition:slide={{ duration: 180 }}
+            class="mt-3 rounded-lg border border-border/60 bg-background/60 p-3 text-xs leading-relaxed text-muted-foreground"
+          >
+            <span class="font-medium text-foreground"
+              >{activePreset.label} —</span
+            >
+            <span class="whitespace-pre-line">{activePreset.notes}</span>
+          </div>
+        {/if}
+      </div>
+
       <div class="relative mb-4">
         <Search
           class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
