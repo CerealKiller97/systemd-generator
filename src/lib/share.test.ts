@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultState, fieldId } from "./systemd-generate";
+import { defaultState, defaultTimerState, fieldId } from "./systemd-generate";
 import { decodeShare, encodeShare } from "./share";
 
 describe("encodeShare / decodeShare", () => {
@@ -42,5 +42,23 @@ describe("encodeShare / decodeShare", () => {
 
     expect(decoded).not.toBeNull();
     expect(decoded!.unitName).toBe("myapp.service");
+  });
+
+  it("round-trips timer mode", () => {
+    const form = defaultTimerState();
+    form[fieldId(1, "OnCalendar")] = "weekly";
+
+    const decoded = decodeShare(encodeShare(form, "backup.timer", "timer"));
+
+    expect(decoded!.mode).toBe("timer");
+    expect(decoded!.unitName).toBe("backup.timer");
+    expect(decoded!.form[fieldId(1, "OnCalendar")]).toBe("weekly");
+    expect(decoded!.form[fieldId(1, "Persistent")]).toBe("yes");
+  });
+
+  it("treats links without a mode as service links", () => {
+    const decoded = decodeShare(encodeShare(defaultState(), "a.service"));
+
+    expect(decoded!.mode).toBe("service");
   });
 });

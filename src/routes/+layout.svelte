@@ -19,7 +19,7 @@
         name: "systemd Unit Generator",
         url: `${siteUrl}/`,
         description:
-            "A free, in-browser tool to build, understand and export systemd .service unit files with an info popup on every directive and a live, syntax-highlighted editor.",
+            "A free, in-browser tool to build, understand and export systemd .service and .timer unit files with an info popup on every directive and a live, syntax-highlighted editor.",
         applicationCategory: "DeveloperApplication",
         operatingSystem: "Any (web browser)",
         browserRequirements: "Requires JavaScript",
@@ -33,14 +33,14 @@
 </script>
 
 <svelte:head>
-    <title>systemd Unit Generator — Build & Export .service Files</title>
+    <title>systemd Unit Generator — Build & Export .service and .timer Files</title>
     <meta
         name="description"
-        content="A free, in-browser systemd unit generator. Fill in the options, read what every directive does, and export a ready-to-use .service file with a live, syntax-highlighted editor. Includes security-hardening options and copy-paste setup commands."
+        content="A free, in-browser systemd unit generator. Fill in the options, read what every directive does, and export a ready-to-use .service or .timer file with a live, syntax-highlighted editor. Includes security-hardening options, scheduling (OnCalendar) options and copy-paste setup commands."
     />
     <meta
         name="keywords"
-        content="systemd, systemd generator, unit file, .service file, systemctl, ExecStart, service unit, Linux daemon, systemd hardening, unit file generator"
+        content="systemd, systemd generator, unit file, .service file, .timer file, systemd timer, OnCalendar, cron alternative, systemctl, ExecStart, service unit, Linux daemon, systemd hardening, unit file generator"
     />
     <meta name="author" content="systemd Unit Generator" />
     <meta name="robots" content="index, follow" />
@@ -55,10 +55,10 @@
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="systemd Unit Generator" />
-    <meta property="og:title" content="systemd Unit Generator — Build & Export .service Files" />
+    <meta property="og:title" content="systemd Unit Generator — Build & Export .service and .timer Files" />
     <meta
         property="og:description"
-        content="Fill in the options, read what every directive does, and export a ready-to-use systemd .service file with a live editor — free and entirely in your browser."
+        content="Fill in the options, read what every directive does, and export a ready-to-use systemd .service or .timer file with a live editor — free and entirely in your browser."
     />
     <meta property="og:url" content="{siteUrl}/" />
     <meta property="og:image" content="{siteUrl}/og-image.png" />
@@ -68,20 +68,20 @@
     <meta property="og:image:height" content="630" />
     <meta
         property="og:image:alt"
-        content="systemd Unit Generator: a form of systemd directives on the left and a live .service file editor on the right."
+        content="systemd Unit Generator: a form of systemd directives on the left and a live .service / .timer file editor on the right."
     />
     <meta property="og:locale" content="en_US" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="systemd Unit Generator — Build & Export .service Files" />
+    <meta name="twitter:title" content="systemd Unit Generator — Build & Export .service and .timer Files" />
     <meta
         name="twitter:description"
-        content="Fill in the options, read what every directive does, and export a ready-to-use systemd .service file with a live editor — free, in your browser."
+        content="Fill in the options, read what every directive does, and export a ready-to-use systemd .service or .timer file with a live editor — free, in your browser."
     />
     <meta name="twitter:image" content="{siteUrl}/og-image.png" />
     <meta
         name="twitter:image:alt"
-        content="systemd Unit Generator interface: directives form and live .service editor."
+        content="systemd Unit Generator interface: directives form and live .service / .timer editor."
     />
 
     <script type="application/ld+json">

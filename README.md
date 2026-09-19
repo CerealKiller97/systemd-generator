@@ -1,9 +1,9 @@
 # systemd Unit Generator
 
-[![systemd Unit Generator — build & export .service files](static/og-image.png)](https://systemd-generator.stefanbogdanovic.dev/)
+[![systemd Unit Generator — build & export .service and .timer files](static/og-image.png)](https://systemd-generator.stefanbogdanovic.dev/)
 
 A polished, single-page web app for building, understanding, and exporting
-systemd `.service` unit files. Every directive has an inline **info popup**
+systemd `.service` and `.timer` unit files. Every directive has an inline **info popup**
 explaining what it does, an example, and a link to the official man page. As you
 fill in options on the left, a **live, syntax-highlighted editor** on the right
 assembles the unit file in real time — then copy or download it and follow the
@@ -16,6 +16,10 @@ accordion.
 
 ## Features
 
+- **Service and timer modes** — switch between a `.service` and a `.timer`
+  generator. Timer mode covers `OnCalendar`, monotonic triggers, `Persistent`,
+  `RandomizedDelaySec` and friends, with setup steps that include the companion
+  service.
 - **All the common directives**, grouped into `[Unit]`, `[Service]`, a dedicated
   **Security hardening** group, and `[Install]`.
 - **Info popup on every option** — description, a concrete example, the man page
@@ -171,7 +175,7 @@ src/
     CommandBlock.svelte      # copy-able shell command
   lib/
     systemd-options.ts       # the data model: every directive + its help text
-    systemd-generate.ts      # turns form state into a .service file
+    systemd-generate.ts      # turns form state into a .service / .timer file
     utils.ts                 # cn() class helper
 static/                      # robots.txt, sitemap, icons, manifest
 ```

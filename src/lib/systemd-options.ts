@@ -6,7 +6,7 @@ export type FieldType =
   | "number"
   | "list";
 
-export type SectionId = "Unit" | "Service" | "Install";
+export type SectionId = "Unit" | "Service" | "Timer" | "Install";
 
 export type SelectChoice = {
   value: string;
@@ -605,6 +605,194 @@ export const SECTIONS: SystemdSection[] = [
         info: "Other units to enable or disable together with this one. Commonly used so enabling a .service also enables its companion .socket or .timer.",
         example: "Also=myapp.socket",
         manpage: "systemd.unit",
+      },
+    ],
+  },
+];
+
+const timerOption = (o: Omit<SystemdOption, "manpage">): SystemdOption => ({
+  ...o,
+  manpage: "systemd.timer",
+});
+
+/** Sections for a `.timer` unit. Field ids use indices into this array. */
+export const TIMER_SECTIONS: SystemdSection[] = [
+  {
+    id: "Unit",
+    title: "[Unit]",
+    description:
+      "Metadata for the timer itself. The job to run lives in a separate .service unit that the timer activates.",
+    defaultOpen: true,
+    options: [
+      {
+        key: "Description",
+        label: "Description",
+        type: "text",
+        placeholder: "Run myapp backup nightly",
+        info: "A free-form, human-readable name for the timer. Shown by `systemctl list-timers` and in logs.",
+        example: "Description=Run myapp backup nightly",
+        manpage: "systemd.unit",
+        recommended: true,
+      },
+      {
+        key: "Documentation",
+        label: "Documentation",
+        type: "list",
+        placeholder: "https://example.com/docs man:myapp(8)",
+        info: "Space-separated list of URIs pointing to documentation for this timer.",
+        example: "Documentation=man:myapp(8)",
+        manpage: "systemd.unit",
+      },
+    ],
+  },
+  {
+    id: "Timer",
+    title: "[Timer]",
+    description:
+      "When to fire. Combine calendar (realtime) triggers with monotonic ones; the timer activates the matching .service unit.",
+    defaultOpen: true,
+    options: [
+      timerOption({
+        key: "OnCalendar",
+        label: "OnCalendar",
+        type: "textarea",
+        placeholder: "*-*-* 03:00:00",
+        info: "Realtime (wall-clock) trigger using calendar event syntax. Shorthands: `minutely`, `hourly`, `daily`, `weekly`, `monthly`, `yearly`. Full form: `DayOfWeek Year-Month-Day Hour:Minute:Second`. One expression per line; each is emitted as its own directive. Verify with `systemd-analyze calendar '<expr>'`.",
+        example: "OnCalendar=Mon..Fri *-*-* 09:00:00",
+        recommended: true,
+      }),
+      timerOption({
+        key: "OnBootSec",
+        label: "OnBootSec",
+        type: "text",
+        placeholder: "15min",
+        info: "Fire this long after the machine booted. Accepts time spans like `30s`, `15min`, `2h`, `1d`.",
+        example: "OnBootSec=15min",
+      }),
+      timerOption({
+        key: "OnStartupSec",
+        label: "OnStartupSec",
+        type: "text",
+        placeholder: "10min",
+        info: "Fire this long after the service manager started. Differs from OnBootSec= only for user timers (per-user manager start).",
+        example: "OnStartupSec=10min",
+      }),
+      timerOption({
+        key: "OnActiveSec",
+        label: "OnActiveSec",
+        type: "text",
+        placeholder: "1h",
+        info: "Fire this long after the timer unit itself was activated.",
+        example: "OnActiveSec=1h",
+      }),
+      timerOption({
+        key: "OnUnitActiveSec",
+        label: "OnUnitActiveSec",
+        type: "text",
+        placeholder: "1h",
+        info: "Fire this long after the unit it activates last became active. Combined with OnBootSec= this gives a simple repeating interval.",
+        example: "OnUnitActiveSec=1h",
+      }),
+      timerOption({
+        key: "OnUnitInactiveSec",
+        label: "OnUnitInactiveSec",
+        type: "text",
+        placeholder: "30min",
+        info: "Fire this long after the unit it activates last became inactive. Useful to guarantee a gap between runs.",
+        example: "OnUnitInactiveSec=30min",
+      }),
+      timerOption({
+        key: "OnClockChange",
+        label: "OnClockChange",
+        type: "boolean",
+        default: "no",
+        info: "Fire whenever the system clock (CLOCK_REALTIME) jumps relative to the monotonic clock.",
+        example: "OnClockChange=yes",
+      }),
+      timerOption({
+        key: "OnTimezoneChange",
+        label: "OnTimezoneChange",
+        type: "boolean",
+        default: "no",
+        info: "Fire whenever the system timezone changes.",
+        example: "OnTimezoneChange=yes",
+      }),
+      timerOption({
+        key: "Persistent",
+        label: "Persistent",
+        type: "boolean",
+        default: "no",
+        info: "Only applies to OnCalendar= timers. Stores the last trigger time on disk and, if the machine was off at the scheduled time, runs the job immediately on next start. Recommended for backups and other catch-up jobs.",
+        example: "Persistent=yes",
+        recommended: true,
+      }),
+      timerOption({
+        key: "RandomizedDelaySec",
+        label: "RandomizedDelaySec",
+        type: "text",
+        placeholder: "5min",
+        info: "Delay each run by a random amount up to this value. Spreads load when many machines share the same schedule.",
+        example: "RandomizedDelaySec=5min",
+      }),
+      timerOption({
+        key: "FixedRandomDelay",
+        label: "FixedRandomDelay",
+        type: "boolean",
+        default: "no",
+        info: "Make the random delay from RandomizedDelaySec= stable across runs (derived from the machine and unit) instead of re-rolled each time.",
+        example: "FixedRandomDelay=yes",
+      }),
+      timerOption({
+        key: "AccuracySec",
+        label: "AccuracySec",
+        type: "text",
+        placeholder: "1min",
+        info: "Timer expirations may be coalesced within this window to save wakeups. Default is 1min; set `1us` for precise timing.",
+        example: "AccuracySec=1s",
+      }),
+      timerOption({
+        key: "WakeSystem",
+        label: "WakeSystem",
+        type: "boolean",
+        default: "no",
+        info: "Resume the system from suspend when the timer elapses.",
+        example: "WakeSystem=yes",
+      }),
+      timerOption({
+        key: "RemainAfterElapse",
+        label: "RemainAfterElapse",
+        type: "boolean",
+        default: "yes",
+        info: "Keep the timer loaded after it elapses (default). Set to `no` for one-shot timers that should be unloaded once they fire.",
+        example: "RemainAfterElapse=no",
+      }),
+      timerOption({
+        key: "Unit",
+        label: "Unit",
+        type: "text",
+        placeholder: "myapp-backup.service",
+        info: "The unit to activate when the timer elapses. Defaults to the .service with the same name as the timer, so you can usually leave this empty.",
+        example: "Unit=myapp-backup.service",
+      }),
+    ],
+  },
+  {
+    id: "Install",
+    title: "[Install]",
+    description:
+      "How `systemctl enable` hooks the timer into boot. Timers are normally wanted by timers.target.",
+    defaultOpen: true,
+    options: [
+      {
+        key: "WantedBy",
+        label: "WantedBy",
+        type: "list",
+        default: "timers.target",
+        placeholder: "timers.target",
+        info: "The target that should pull in this timer when enabled. `timers.target` is the standard choice and makes sure timers are set up early during boot.",
+        example: "WantedBy=timers.target",
+        manpage: "systemd.unit",
+        recommended: true,
       },
     ],
   },
