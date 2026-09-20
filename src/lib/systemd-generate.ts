@@ -1,4 +1,9 @@
-import { SECTIONS, type SectionId, type SystemdOption } from "./systemd-options";
+import {
+  SECTIONS,
+  TIMER_SECTIONS,
+  type SystemdOption,
+  type SystemdSection,
+} from "./systemd-options";
 
 export type FormState = Record<string, string>;
 
@@ -6,7 +11,15 @@ export type FormState = Record<string, string>;
 export const fieldId = (sectionIndex: number, key: string) =>
   `${sectionIndex}.${key}`;
 
-const ORDER: SectionId[] = ["Unit", "Service", "Install"];
+export type UnitMode = "service" | "timer";
+
+export const sectionsFor = (mode: UnitMode): SystemdSection[] =>
+  mode === "timer" ? TIMER_SECTIONS : SECTIONS;
+
+export const DEFAULT_UNIT_NAME: Record<UnitMode, string> = {
+  service: "myapp.service",
+  timer: "myapp.timer",
+};
 
 function emitLines(opt: SystemdOption, raw: string): string[] {
   const value = raw ?? "";
@@ -41,14 +54,18 @@ export type GenerateResult = {
   count: number;
 };
 
-export function generateUnitFile(state: FormState): GenerateResult {
-  const buckets: Record<SectionId, string[]> = {
-    Unit: [],
-    Service: [],
-    Install: [],
-  };
+export function generateUnitFile(
+  state: FormState,
+  sections: SystemdSection[] = SECTIONS
+): GenerateResult {
+  // Sections sharing an id (e.g. the hardening group inside [Service]) merge
+  // into one block, emitted in order of first appearance.
+  const order = [...new Set(sections.map((s) => s.id))];
+  const buckets: Record<string, string[]> = Object.fromEntries(
+    order.map((id) => [id, []])
+  );
 
-  SECTIONS.forEach((section, sectionIndex) => {
+  sections.forEach((section, sectionIndex) => {
     section.options.forEach((opt) => {
       const id = fieldId(sectionIndex, opt.key);
       const lines = emitLines(opt, state[id] ?? "");
@@ -57,7 +74,7 @@ export function generateUnitFile(state: FormState): GenerateResult {
   });
 
   const parts: string[] = [];
-  for (const id of ORDER) {
+  for (const id of order) {
     if (buckets[id].length === 0) {
       continue;
     }
@@ -66,7 +83,7 @@ export function generateUnitFile(state: FormState): GenerateResult {
     parts.push(""); // blank line between sections
   }
 
-  const count = ORDER.reduce((n, id) => n + buckets[id].length, 0);
+  const count = order.reduce((n, id) => n + buckets[id].length, 0);
 
   if (count === 0) {
     return {
@@ -80,9 +97,9 @@ export function generateUnitFile(state: FormState): GenerateResult {
 }
 
 /** A clean slate carrying only each option's own default value. */
-export function emptyState(): FormState {
+export function emptyState(sections: SystemdSection[] = SECTIONS): FormState {
   const s: FormState = {};
-  SECTIONS.forEach((section, sectionIndex) => {
+  sections.forEach((section, sectionIndex) => {
     section.options.forEach((opt) => {
       if (opt.default) {
         s[fieldId(sectionIndex, opt.key)] = opt.default;
@@ -107,3 +124,18 @@ export function defaultState(): FormState {
 
   return s;
 }
+
+/** Starter example for a timer, so the right pane is never empty. */
+export function defaultTimerState(): FormState {
+  const s = emptyState(TIMER_SECTIONS);
+
+  s[fieldId(0, "Description")] = "Run my example job daily";
+  s[fieldId(1, "OnCalendar")] = "daily";
+  s[fieldId(1, "Persistent")] = "yes";
+  s[fieldId(1, "RandomizedDelaySec")] = "5min";
+
+  return s;
+}
+
+export const defaultStateFor = (mode: UnitMode): FormState =>
+  mode === "timer" ? defaultTimerState() : defaultState();

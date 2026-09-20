@@ -39,12 +39,12 @@
   </g>
 
   <!-- eyebrow -->
-  <text x="184" y="128" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="20" letter-spacing="3" fill="#22d3ee" font-weight="600">SYSTEMD · UNIT FILE BUILDER</text>
+  <text x="184" y="128" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="20" letter-spacing="3" fill="#22d3ee" font-weight="600">SYSTEMD · SERVICE &amp; TIMER BUILDER</text>
   <text x="184" y="160" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="20" fill="#64748b">Free · runs in your browser · no signup</text>
 
   <!-- title -->
   <text x="80" y="296" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="64" font-weight="800" fill="url(#title)" letter-spacing="-1.5">systemd Unit Generator</text>
-  <text x="80" y="364" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Build, understand &amp; export <tspan fill="#e2e8f0" font-weight="600">.service</tspan> files — with an</text>
+  <text x="80" y="364" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Build, understand &amp; export <tspan fill="#e2e8f0" font-weight="600">.service</tspan> &amp; <tspan fill="#e2e8f0" font-weight="600">.timer</tspan> files — with an</text>
   <text x="80" y="406" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">info popup on every directive and a live editor.</text>
 
   <!-- feature pills -->

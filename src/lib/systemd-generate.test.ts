@@ -3,8 +3,10 @@ import {
   defaultState,
   emptyState,
   fieldId,
+  defaultTimerState,
   generateUnitFile,
 } from "./systemd-generate";
+import { TIMER_SECTIONS } from "./systemd-options";
 
 describe("fieldId", () => {
   it("combines section index and directive key", () => {
@@ -117,5 +119,37 @@ describe("generateUnitFile", () => {
     expect(content).toContain("[Service]");
     expect(content).toContain("Description=My example service");
     expect(content).toContain("ExecStart=/usr/local/bin/myapp --port 8080");
+  });
+});
+
+describe("timer units", () => {
+  it("emits Unit → Timer → Install from the default timer state", () => {
+    const { content } = generateUnitFile(defaultTimerState(), TIMER_SECTIONS);
+
+    expect(content.indexOf("[Unit]")).toBeLessThan(content.indexOf("[Timer]"));
+    expect(content.indexOf("[Timer]")).toBeLessThan(content.indexOf("[Install]"));
+    expect(content).toContain("OnCalendar=daily");
+    expect(content).toContain("Persistent=yes");
+    expect(content).toContain("WantedBy=timers.target");
+    expect(content).not.toContain("[Service]");
+  });
+
+  it("emits one OnCalendar line per expression", () => {
+    const state = { [fieldId(1, "OnCalendar")]: "Mon *-*-* 09:00\nFri *-*-* 17:00" };
+    const { content } = generateUnitFile(state, TIMER_SECTIONS);
+
+    expect(content).toContain("OnCalendar=Mon *-*-* 09:00");
+    expect(content).toContain("OnCalendar=Fri *-*-* 17:00");
+  });
+
+  it("omits booleans at their default and emits RemainAfterElapse=no", () => {
+    const state = {
+      [fieldId(1, "Persistent")]: "no",
+      [fieldId(1, "RemainAfterElapse")]: "yes",
+    };
+    expect(generateUnitFile(state, TIMER_SECTIONS).count).toBe(0);
+
+    state[fieldId(1, "RemainAfterElapse")] = "no";
+    expect(generateUnitFile(state, TIMER_SECTIONS).content).toContain("RemainAfterElapse=no");
   });
 });

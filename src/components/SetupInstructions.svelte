@@ -2,15 +2,48 @@
     import { Terminal } from "@lucide/svelte";
     import CommandBlock from "./CommandBlock.svelte";
 
+    import type { UnitMode } from "@/lib/systemd-generate";
+
     type Props = {
         unitName: string;
+        mode?: UnitMode;
     };
 
-    let { unitName }: Props = $props();
+    let { unitName, mode = "service" }: Props = $props();
 
-    const name = $derived(unitName.endsWith(".service") ? unitName : `${unitName}.service`);
+    const suffix = $derived(`.${mode}`);
+    const name = $derived(unitName.endsWith(suffix) ? unitName : `${unitName}${suffix}`);
+    // A timer activates the .service of the same name unless Unit= says otherwise.
+    const serviceName = $derived(name.replace(/\.timer$/, ".service"));
 
-    const steps = $derived([
+    const timerSteps = $derived([
+        {
+            cmd: `sudo tee /etc/systemd/system/${serviceName} > /dev/null <<'EOF'\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/myapp --job\nEOF`,
+            note: `A timer only schedules — it needs a service to run. Create ${serviceName} (Type=oneshot suits jobs that run and exit), or point Unit= at an existing one. Don't enable the service itself.`,
+        },
+        {
+            cmd: `sudo tee /etc/systemd/system/${name} > /dev/null <<'EOF'\n# …paste the generated file here…\nEOF`,
+            note: "Place the timer file next to it in /etc/systemd/system/.",
+        },
+        {
+            cmd: `sudo systemd-analyze verify /etc/systemd/system/${name}`,
+            note: "Sanity-check both files for syntax errors and unknown directives.",
+        },
+        {
+            cmd: `sudo systemctl daemon-reload`,
+            note: "Make systemd aware of the new or changed unit files.",
+        },
+        {
+            cmd: `sudo systemctl enable --now ${name}`,
+            note: "Enable and start the timer (not the service). It will now fire on schedule and after every boot.",
+        },
+        {
+            cmd: `systemctl list-timers ${name}`,
+            note: `See when it last ran and when it fires next. Use journalctl -u ${serviceName} to read the job's output, and systemctl start ${serviceName} to test it right now.`,
+        },
+    ]);
+
+    const serviceSteps = $derived([
         {
             cmd: `sudo tee /etc/systemd/system/${name} > /dev/null <<'EOF'\n# …paste the generated file here…\nEOF`,
             note: "Place the unit file. System-wide units live in /etc/systemd/system/. (Or just drop your downloaded file there with sudo cp.)",
@@ -32,6 +65,8 @@
             note: `Check it's running. Use journalctl -u ${name} -f to follow logs.`,
         },
     ]);
+
+    const steps = $derived(mode === "timer" ? timerSteps : serviceSteps);
 </script>
 
 <div class="overflow-hidden rounded-xl border border-border/60 bg-card/40">

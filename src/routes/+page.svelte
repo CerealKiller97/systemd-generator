@@ -12,8 +12,16 @@
     import { PRESETS, type Preset } from "@/lib/presets";
     import { decodeShare, encodeShare } from "@/lib/share";
     import { GITHUB_REPO_URL } from "@/lib/site";
-    import { defaultState, emptyState, fieldId, generateUnitFile, type FormState } from "@/lib/systemd-generate";
-    import { SECTIONS } from "@/lib/systemd-options";
+    import {
+        DEFAULT_UNIT_NAME,
+        defaultStateFor,
+        emptyState,
+        fieldId,
+        generateUnitFile,
+        sectionsFor,
+        type FormState,
+        type UnitMode,
+    } from "@/lib/systemd-generate";
     import { trackEvent } from "@/lib/umami";
     import { copyText } from "@/lib/utils";
     import {
@@ -35,17 +43,23 @@
     import { onMount } from "svelte";
     import { fade, fly, slide } from "svelte/transition";
 
-    let form: FormState = $state(defaultState());
+    let mode: UnitMode = $state("service");
+    let form: FormState = $state(defaultStateFor("service"));
     let query = $state("");
-    let unitName = $state("myapp.service");
+    let unitName = $state(DEFAULT_UNIT_NAME.service);
+    // Each mode keeps its own work-in-progress while the other one is active.
+    const stash: Partial<Record<UnitMode, { form: FormState; unitName: string }>> = {};
     let activePreset: Preset | null = $state(null);
     let copied = $state(false);
     let shared = $state(false);
     let flash = $state(false);
     let showChecks = $state(false);
-    let openMap: Record<number, boolean> = $state(Object.fromEntries(SECTIONS.map((s, i) => [i, !!s.defaultOpen])));
+    const sections = $derived(sectionsFor(mode));
+    let openMap: Record<number, boolean> = $state(
+        Object.fromEntries(sectionsFor("service").map((s, i) => [i, !!s.defaultOpen])),
+    );
 
-    const result = $derived(generateUnitFile(form));
+    const result = $derived(generateUnitFile(form, sections));
     const q = $derived(query.trim().toLowerCase());
     const hardening = $derived(hardeningScore(form));
     const lints = $derived(validate(form));
@@ -59,6 +73,7 @@
 
         const decoded = decodeShare(token);
         if (decoded) {
+            applyMode(decoded.mode);
             form = decoded.form;
             unitName = decoded.unitName;
             trackEvent("open-shared-link");
@@ -79,24 +94,44 @@
         info: Info,
     };
 
+    function applyMode(next: UnitMode) {
+        mode = next;
+        openMap = Object.fromEntries(sectionsFor(next).map((s, i) => [i, !!s.defaultOpen]));
+        activePreset = null;
+        query = "";
+    }
+
+    function switchMode(next: UnitMode) {
+        if (next === mode) {
+            return;
+        }
+
+        stash[mode] = { form, unitName };
+        const saved = stash[next];
+        applyMode(next);
+        form = saved?.form ?? defaultStateFor(next);
+        unitName = saved?.unitName ?? DEFAULT_UNIT_NAME[next];
+        trackEvent("switch-mode", { mode: next });
+    }
+
     function set(id: string, value: string) {
         form[id] = value;
     }
 
     function reset() {
-        form = defaultState();
+        form = defaultStateFor(mode);
         activePreset = null;
         trackEvent("reset-form");
     }
 
     function loadPreset(preset: Preset) {
-        form = { ...emptyState(), ...preset.fields };
+        form = { ...emptyState(sections), ...preset.fields };
         unitName = preset.unitName;
         activePreset = preset;
         trackEvent("load-preset", { preset: preset.id, group: preset.group });
     }
 
-    function matches(o: (typeof SECTIONS)[number]["options"][number]) {
+    function matches(o: (typeof sections)[number]["options"][number]) {
         if (!q) {
             return true;
         }
@@ -107,7 +142,7 @@
     async function copy() {
         await copyText(result.content);
         trackEvent("copy-unit", {
-            unit: unitName || "myapp.service",
+            unit: unitName || DEFAULT_UNIT_NAME[mode],
             preset: activePreset?.id ?? "custom",
         });
         copied = true;
@@ -119,7 +154,7 @@
     }
 
     async function share() {
-        const token = encodeShare(form, unitName || "myapp.service");
+        const token = encodeShare(form, unitName || DEFAULT_UNIT_NAME[mode], mode);
         const url = `${location.origin}${location.pathname}#${token}`;
         // SvelteKit owns the history stack; use its replaceState so the hash isn't
         // stripped by the router on the next tick.
@@ -132,7 +167,7 @@
 
     function download() {
         trackEvent("download-unit", {
-            unit: unitName || "myapp.service",
+            unit: unitName || DEFAULT_UNIT_NAME[mode],
             preset: activePreset?.id ?? "custom",
         });
         const blob = new Blob([result.content], {
@@ -141,7 +176,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = unitName || "myapp.service";
+        a.download = unitName || DEFAULT_UNIT_NAME[mode];
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -164,8 +199,25 @@
                 <h1 class="text-[15px] font-semibold tracking-tight">systemd Unit Generator</h1>
                 <p class="text-xs text-muted-foreground">
                     Build, understand &amp; export a
-                    <code class="text-primary">.service</code> file
+                    <code class="text-primary">.{mode}</code> file
                 </p>
+            </div>
+            <div class="ml-2 flex rounded-md border border-input p-0.5" role="tablist" aria-label="Unit type">
+                {#each ["service", "timer"] as const as m (m)}
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={mode === m}
+                        onclick={() => switchMode(m)}
+                        class={`rounded px-3 py-1 text-xs font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                            mode === m
+                                ? "bg-primary/15 text-primary"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        {m}
+                    </button>
+                {/each}
             </div>
             <Badge variant="muted" class="ml-1 hidden sm:flex">
                 {result.count}
@@ -193,7 +245,10 @@
     <main class="mx-auto grid max-w-[1500px] grid-cols-1 gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
         <!-- LEFT — form -->
         <section class="min-w-0">
+            {#key mode}
+            <div in:fade={{ duration: 220 }}>
             <!-- Presets -->
+            {#if mode === "service"}
             <div class="mb-4 rounded-xl border border-border/60 bg-card/40 p-4">
                 <div class="mb-2.5 flex items-center gap-2">
                     <Star class="h-3.5 w-3.5 text-primary" />
@@ -232,6 +287,7 @@
                     </div>
                 {/if}
             </div>
+            {/if}
 
             <div class="relative mb-4">
                 <Search
@@ -246,7 +302,7 @@
             </div>
 
             <div class="space-y-2">
-                {#each SECTIONS as section, sectionIndex (sectionIndex)}
+                {#each sections as section, sectionIndex (`${mode}-${sectionIndex}`)}
                     {@const opts = section.options.filter(matches)}
                     {#if opts.length > 0}
                         {@const isOpen = q ? true : openMap[sectionIndex]}
@@ -294,11 +350,14 @@
                     {/if}
                 {/each}
             </div>
+            </div>
+            {/key}
         </section>
 
         <!-- RIGHT — code + instructions -->
         <section class="min-w-0">
-            <div class="space-y-4 lg:sticky lg:top-[72px]">
+            {#key mode}
+            <div in:fade={{ duration: 220 }} class="space-y-4 lg:sticky lg:top-[72px]">
                 <div
                     class={`overflow-hidden rounded-xl border border-border/60 bg-[#0c1320] shadow-xl ${flash ? "copy-flash" : ""}`}
                 >
@@ -345,6 +404,7 @@
                 </div>
 
                 <!-- Analysis: hardening score + validation -->
+                {#if mode === "service"}
                 <div class="rounded-xl border border-border/60 bg-card/40">
                     <!-- hardening score -->
                     <div class="flex items-center gap-3 px-4 py-3">
@@ -417,8 +477,11 @@
                     </div>
                 </div>
 
-                <SetupInstructions unitName={unitName || "myapp.service"} />
+                {/if}
+
+                <SetupInstructions {mode} unitName={unitName || DEFAULT_UNIT_NAME[mode]} />
             </div>
+            {/key}
         </section>
     </main>
 
