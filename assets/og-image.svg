@@ -44,8 +44,8 @@
 
   <!-- title -->
   <text x="80" y="296" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="64" font-weight="800" fill="url(#title)" letter-spacing="-1.5">systemd Unit Generator</text>
-  <text x="80" y="364" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Build, understand &amp; export <tspan fill="#e2e8f0" font-weight="600">.service</tspan> &amp; <tspan fill="#e2e8f0" font-weight="600">.timer</tspan> files — with an</text>
-  <text x="80" y="406" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">info popup on every directive and a live editor.</text>
+  <text x="80" y="364" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Build, understand &amp; export <tspan fill="#e2e8f0" font-weight="600">.service</tspan> &amp; <tspan fill="#e2e8f0" font-weight="600">.timer</tspan> files.</text>
+  <text x="80" y="406" font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Info popup on every directive, plus a live editor.</text>
 
   <!-- feature pills -->
   <g font-family="Inter,'Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="500">

@@ -23,11 +23,11 @@ const config = {
       mode: "auto",
       directives: {
         "default-src": ["self"],
-        "script-src": ["self", umamiOrigin],
+        "script-src": ["self", umamiOrigin, "https://static.cloudflareinsights.com"],
         "style-src": ["self", "unsafe-inline"],
         "font-src": ["self"],
         "img-src": ["self", "data:"],
-        "connect-src": ["self", umamiOrigin],
+        "connect-src": ["self", umamiOrigin, "https://cloudflareinsights.com"],
         "frame-ancestors": ["self"],
         "base-uri": ["self"],
         "form-action": ["self"],

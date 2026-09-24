@@ -41,7 +41,7 @@ jobs:
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
-          args: --tag ${{ github.ref_name }} --prepend CHANGELOG.md
+          args: --latest --prepend CHANGELOG.md
 
       - name: Commit and push CHANGELOG
         env:
